@@ -211,3 +211,7 @@ func (con ArbSys) isTopLevel(c ctx, evm mech) bool {
 	depth := evm.Depth()
 	return depth < 2 || evm.Origin == c.txProcessor.Callers[depth-2]
 }
+
+func (con *ArbSys) SayHi(c ctx, evm mech) (string, error) {
+	return "hi", nil
+}
