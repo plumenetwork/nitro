@@ -21,6 +21,15 @@ func (con ArbInfo) GetBalance(c ctx, evm mech, account addr) (huge, error) {
 	return evm.StateDB.GetBalance(account), nil
 }
 
+// GetBalanceCustom retrieves an account's balance with reduced gas costs
+func (con ArbInfo) GetBalanceCustom(c ctx, evm mech, account addr) (huge, error) {
+	const gasForBalanceCall = uint64(300)
+	if err := c.Burn(gasForBalanceCall); err != nil {
+		return nil, err
+	}
+	return evm.StateDB.GetBalance(account), nil
+}
+
 // GetCode retrieves a contract's deployed code
 func (con ArbInfo) GetCode(c ctx, evm mech, account addr) ([]byte, error) {
 	if err := c.Burn(params.ColdSloadCostEIP2929); err != nil {
