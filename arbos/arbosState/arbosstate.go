@@ -54,6 +54,7 @@ type ArbosState struct {
 	brotliCompressionLevel storage.StorageBackedUint64 // brotli compression level used for pricing
 	backingStorage         *storage.Storage
 	Burner                 burn.Burner
+	myNumber               storage.StorageBackedUint64
 }
 
 var ErrUninitializedArbOS = errors.New("ArbOS uninitialized")
@@ -87,6 +88,7 @@ func OpenArbosState(stateDB vm.StateDB, burner burn.Burner) (*ArbosState, error)
 		backingStorage.OpenStorageBackedUint64(uint64(brotliCompressionLevelOffset)),
 		backingStorage,
 		burner,
+		backingStorage.OpenStorageBackedUint64(uint64(myNumberOffset)),
 	}, nil
 }
 
@@ -143,6 +145,7 @@ const (
 	genesisBlockNumOffset
 	infraFeeAccountOffset
 	brotliCompressionLevelOffset
+	myNumberOffset
 )
 
 type SubspaceID []byte
@@ -220,6 +223,7 @@ func InitializeArbosState(stateDB vm.StateDB, burner burn.Burner, chainConfig *p
 	_ = chainConfigStorage.Set(initMessage.SerializedChainConfig)
 	_ = sto.SetUint64ByUint64(uint64(genesisBlockNumOffset), chainConfig.ArbitrumChainParams.GenesisBlockNum)
 	_ = sto.SetUint64ByUint64(uint64(brotliCompressionLevelOffset), 0) // default brotliCompressionLevel for fast compression is 0
+	_ = sto.SetUint64ByUint64(uint64(myNumberOffset), 0)
 
 	initialRewardsRecipient := l1pricing.BatchPosterAddress
 	if desiredArbosVersion >= 2 {
@@ -398,6 +402,14 @@ func (state *ArbosState) SetBrotliCompressionLevel(val uint64) error {
 		return state.brotliCompressionLevel.Set(val)
 	}
 	return errors.New("invalid brotli compression level")
+}
+
+func (state *ArbosState) MyNumber() (uint64, error) {
+	return state.myNumber.Get()
+}
+
+func (state *ArbosState) SetMyNumber(val uint64) error {
+	return state.myNumber.Set(val)
 }
 
 func (state *ArbosState) RetryableState() *retryables.RetryableState {
